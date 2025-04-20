@@ -22,33 +22,39 @@ class DashboardProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Fetch tasks from Supabase
+  /// Fetch tasks of logged-in user from Supabase
   Future<void> fetchTasks() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+
     setLoadingToggle(true);
 
-    final response = await _client.from(TableName.taskTable).select();
+    final response =
+        await _client.from(TableName.taskTable).select().eq('user_id', userId);
 
     _tasks =
         List<TaskModel>.from(response.map((task) => TaskModel.fromMap(task)));
 
     setLoadingToggle(false);
-
-    print('Tasks : $_tasks');
     notifyListeners();
   }
 
   /// Add a new task
   Future<void> addTask() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+
     setLoadingToggle(true);
 
     final title = titleController.text.trim();
     final description = descriptionController.text.trim();
 
-    final response = await _client.from(TableName.taskTable).insert([
+    await _client.from(TableName.taskTable).insert([
       {
         'title': title,
         'description': description,
         'status': 'pending',
+        'user_id': userId, // Save task under logged-in user
       }
     ]);
 
@@ -61,21 +67,24 @@ class DashboardProvider with ChangeNotifier {
 
     titleController.clear();
     descriptionController.clear();
-
-    return response;
   }
 
   /// Update a task
   Future<void> updateTask(int taskId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+
     final title = titleController.text.trim();
     final description = descriptionController.text.trim();
 
-    final response = await _client.from(TableName.taskTable).update(
-      {
-        'title': title,
-        'description': description,
-      },
-    ).eq('id', taskId);
+    await _client
+        .from(TableName.taskTable)
+        .update({
+          'title': title,
+          'description': description,
+        })
+        .eq('id', taskId)
+        .eq('user_id', userId); // Ensure task belongs to user
 
     Fluttertoast.showToast(
       msg: 'Task updated successfully',
@@ -83,14 +92,18 @@ class DashboardProvider with ChangeNotifier {
     );
 
     await fetchTasks();
-
-    return response;
   }
 
   /// Delete a task
   Future<void> deleteTask(int taskId) async {
-    final response =
-        await _client.from(TableName.taskTable).delete().eq('id', taskId);
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    await _client
+        .from(TableName.taskTable)
+        .delete()
+        .eq('id', taskId)
+        .eq('user_id', userId); // Only delete user's task
 
     Fluttertoast.showToast(
       msg: 'Task deleted successfully',
@@ -98,25 +111,26 @@ class DashboardProvider with ChangeNotifier {
     );
 
     await fetchTasks();
-
-    return response;
   }
 
-  // Toggle task status between 'pending' and 'completed'
+  /// Toggle task status between 'pending' and 'completed'
   Future<void> toggleTaskStatus(int taskId, String currentStatus) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+
     final newStatus = currentStatus == 'pending' ? 'completed' : 'pending';
 
-    final response = await _client
+    await _client
         .from(TableName.taskTable)
-        .update({'status': newStatus}).eq('id', taskId);
+        .update({'status': newStatus})
+        .eq('id', taskId)
+        .eq('user_id', userId); // Secure toggle
 
     Fluttertoast.showToast(
-      msg: 'Task Status updated successfully',
+      msg: 'Task status updated successfully',
       backgroundColor: Colors.green,
     );
 
     await fetchTasks();
-
-    return response;
   }
 }

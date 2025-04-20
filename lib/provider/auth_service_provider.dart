@@ -70,6 +70,8 @@ class AuthServiceProvider with ChangeNotifier {
         backgroundColor: Colors.green,
       );
 
+      await SharedPreferencesHelper.saveKey(PrefsKeys.loginEmail, email);
+
       NavigationClass.pushAndRemoveUntilWithSlideTransition(
           context: context, page: LoginScreen());
     } catch (e) {

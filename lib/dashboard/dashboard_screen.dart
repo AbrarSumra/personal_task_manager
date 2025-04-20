@@ -54,7 +54,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              auth.logout(context);
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: AppColor.kAppLightBlueColor,
+                  title: const NormalText(
+                    title: "Confirm Logout",
+                    color: AppColor.kAppMainColor,
+                  ),
+                  content: const NormalText(
+                    title: "Are you sure you want to logout?",
+                    fontSize: 12,
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const NormalText(
+                        title: "Cancel",
+                        fontSize: 14,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop(); // close dialog
+                        await auth.logout(context);
+                      },
+                      child: const NormalText(
+                        title: "Log Out",
+                        color: AppColor.kAppMainColor,
+                      ),
+                    ),
+                  ],
+                ),
+              );
             },
           ),
         ],
@@ -90,7 +124,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         onDismissed: (_) {
                           provider.deleteTask(taskId!);
                         },
-                        background: Container(color: Colors.red),
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          color: Colors.red,
+                          child: Center(
+                              child: Icon(Icons.delete, color: Colors.white)),
+                        ),
                         child: Container(
                           width: double.infinity,
                           padding: EdgeInsets.all(5.w),
@@ -137,7 +176,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   GestureDetector(
                                     onTap: () {
-                                      provider.deleteTask(taskId!);
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          backgroundColor:
+                                              AppColor.kAppLightBlueColor,
+                                          title: const NormalText(
+                                            title: "Confirm Delete",
+                                            color: AppColor.kAppMainColor,
+                                          ),
+                                          content: const NormalText(
+                                            title:
+                                                "Are you sure you want to delete this task?",
+                                            fontSize: 12,
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: const NormalText(
+                                                title: "Cancel",
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed: () async {
+                                                Navigator.of(context)
+                                                    .pop(); // close dialog
+                                                await provider
+                                                    .deleteTask(taskId!);
+                                              },
+                                              child: const NormalText(
+                                                title: "Delete",
+                                                color: Colors.red,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
                                     },
                                     child: NormalText(
                                       title: 'Delete',
